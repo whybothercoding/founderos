@@ -11,7 +11,7 @@ export function RerunButton({ repo, id }: { repo: string; id: number }) {
   }
   const label = { idle: "re-run failed", confirm: "confirm?", busy: "…", done: "queued" }[s] ?? s;
   return (
-    <button onClick={go} disabled={s === "busy" || s === "done"} className={`ml-2 rounded border px-1.5 text-xs ${s === "confirm" ? "border-amber-500 text-amber-400" : "border-zinc-700 text-zinc-400 hover:text-white"}`}>
+    <button onClick={go} disabled={s === "busy" || s === "done"} className={`ml-2 rounded border px-1.5 text-xs ${s === "confirm" ? "border-amber-600 dark:border-amber-500 text-amber-600 dark:text-amber-400" : "border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
       {label}
     </button>
   );
@@ -28,7 +28,7 @@ export function FixTaskButton({ repo, id, workflow, branch }: { repo: string; id
   }
   const label = { idle: "→ fix task", busy: "…", done: "task added" }[s] ?? s;
   return (
-    <button onClick={go} disabled={s === "busy" || s === "done"} className="ml-2 rounded border border-zinc-700 px-1.5 text-xs text-zinc-400 hover:text-white">
+    <button onClick={go} disabled={s === "busy" || s === "done"} className="ml-2 rounded border border-zinc-300 dark:border-zinc-700 px-1.5 text-xs text-zinc-400 dark:text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white">
       {label}
     </button>
   );

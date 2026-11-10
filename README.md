@@ -4,7 +4,9 @@ A local dashboard and agent dispatcher for a solo operator who runs many project
 
 It sits on top of [Herdr](https://herdr.dev) (the terminal workspace manager for AI coding agents) and works with **Claude Code, Codex, Grok and Antigravity**. It runs on your machine only and reads every source live. There is nothing to sync and no automation workflows to maintain.
 
-![FounderOS dashboard, shown with the built-in demo data](docs/screenshot.png)
+<p><img src="docs/screenshot.png" alt="FounderOS dashboard in dark mode, with the built-in demo data" width="49%"> <img src="docs/screenshot-light.png" alt="The same dashboard in light mode" width="49%"></p>
+
+The UI follows the system light/dark setting (demo data shown).
 
 ## What it shows
 
