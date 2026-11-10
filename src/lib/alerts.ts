@@ -18,6 +18,7 @@ export async function checkAndAlert() {
     { prefix: "ci", ok: d.ci.ok, items: d.ci.ok ? d.ci.data.map((r) => [`ci:${r.id}`, `❌ CI ${r.repo} · ${r.workflow} (${r.branch})`]) : [] },
     { prefix: "n8n", ok: d.n8n.ok, items: d.n8n.ok ? d.n8n.data.map((e) => [`n8n:${e.id}`, `⚠️ n8n failed: ${e.workflow}`]) : [] },
     { prefix: "mail", ok: d.mail.ok, items: d.mail.ok ? d.mail.data.map((m) => [`mail:${m.id}`, `📧 reply needed: ${m.from} — ${m.subject.slice(0, 60)}`]) : [] },
+    { prefix: "stuck", ok: d.tasks.ok, items: d.stuck.map((t) => [`stuck:${t.id}`, `⏸ task stuck in running: ${t.title}`]) },
     { prefix: "due", ok: d.tasks.ok, items: d.dueTasks.map((t) => [`due:${t.id}:${t.due}`, `📌 due: ${t.title}`]) },
   ];
 

@@ -77,3 +77,20 @@ export function AddTaskForm({ repos }: { repos: string[] }) {
     </form>
   );
 }
+
+/** Close / reopen a task, or reset one stuck in `running` (its dispatch process is gone). */
+export function TaskActions({ id, status, stuck }: { id: number; status: string; stuck: boolean }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  async function set(next: "todo" | "done") {
+    setBusy(true);
+    await post("/api/tasks/status", { id, status: next });
+    setBusy(false);
+    router.refresh();
+  }
+  const btn = "ml-2 rounded border border-zinc-700 px-1.5 text-xs text-zinc-400 hover:text-white";
+  if (status === "review") return <><button disabled={busy} onClick={() => set("done")} className={btn}>done</button><button disabled={busy} onClick={() => set("todo")} className={btn}>reopen</button></>;
+  if (stuck) return <button disabled={busy} onClick={() => set("todo")} className={`${btn} border-amber-600 text-amber-400`}>reset stuck</button>;
+  if (status === "todo") return <button disabled={busy} onClick={() => set("done")} className={btn}>done</button>;
+  return null;
+}

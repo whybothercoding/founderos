@@ -88,3 +88,28 @@ export async function listSenders(): Promise<Sender[]> {
     .filter((s) => s.address)
     .sort((a, b) => a.entity.localeCompare(b.entity) || a.address.localeCompare(b.address));
 }
+
+export type Run = { id: number; summary: string; agent: string; outcome: string; started: string | null; ended: string | null; result: string; task: string };
+
+/** Latest runs, newest first. */
+export async function listRuns(limit = 12): Promise<Run[]> {
+  const j = await api<{ results: Record<string, unknown>[] }>("GET", TABLES.runs);
+  const link = (x: unknown) => (Array.isArray(x) && x[0] && typeof x[0] === "object" ? String((x[0] as { value?: unknown }).value ?? "") : "");
+  return j.results
+    .map((x) => ({
+      id: x.id as number,
+      summary: String(x.summary ?? ""),
+      agent: val(x.agent),
+      outcome: val(x.outcome),
+      started: (x.started as string) || null,
+      ended: (x.ended as string) || null,
+      result: String(x.result ?? ""),
+      task: link(x.task),
+    }))
+    .sort((a, b) => (b.started ?? "").localeCompare(a.started ?? ""))
+    .slice(0, limit);
+}
+
+export async function setTaskStatus(id: number, status: "todo" | "running" | "review" | "done") {
+  await updateTask(id, { status });
+}

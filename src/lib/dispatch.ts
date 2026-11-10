@@ -25,6 +25,9 @@ function command(agent: AgentName, prompt: string, cwd: string, lastMsgFile: str
 const active = ((globalThis as { __fosActive?: Set<number> }).__fosActive ??= new Set<number>());
 const TIMEOUT_MS = 30 * 60_000;
 
+/** Tasks this server process is currently running (a `running` task not in here is stuck). */
+export const activeTaskIds = () => new Set(active);
+
 export async function dispatch(taskId: number, agent: string) {
   if (!(AGENTS as readonly string[]).includes(agent)) throw new Error("unknown agent");
   const a = agent as AgentName;

@@ -3,10 +3,10 @@ import { loadDashboard } from "@/lib/dashboard";
 import type { Panel } from "@/lib/exec";
 import { alertsEnabled } from "@/lib/alerts";
 import { localRepos } from "@/lib/git";
-import { RerunButton } from "./rerun-button";
+import { FixTaskButton, RerunButton } from "./rerun-button";
 import { listSenders } from "@/lib/baserow";
 import { Compose, EmailTaskButton } from "./compose";
-import { AddTaskForm, AutoRefresh, DispatchControl } from "./task-controls";
+import { AddTaskForm, AutoRefresh, DispatchControl, TaskActions } from "./task-controls";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +69,7 @@ export default async function Home() {
                   {r.repo.split("/")[1]} · {r.workflow} <span className="text-zinc-500">{r.branch} · {rel(r.when)}</span>
                 </a>
                 <RerunButton repo={r.repo} id={r.id} />
+                <FixTaskButton repo={r.repo} id={r.id} workflow={r.workflow} branch={r.branch} />
               </div>
             ))}
           </Body>
@@ -87,8 +88,9 @@ export default async function Home() {
             }}
           </Body>
         </Card>
-        <Card title="Open loops (git)" count={d.loops.ok ? d.loops.data.length : undefined}>
-          <Body p={d.loops} empty="all repos clean and pushed">
+        <Card title="Open loops (git, stuck tasks)" count={(d.loops.ok ? d.loops.data.length : 0) + d.stuck.length}>
+          {d.stuck.map((t) => <div key={`stuck${t.id}`} className="text-amber-400">⏸ stuck in running: {t.title}</div>)}
+          <Body p={d.loops} empty={d.stuck.length ? "no repo loops" : "all repos clean and pushed"}>
             {(rows) => rows.map((l) => (
               <div key={l.path}>{l.path} <span className="text-zinc-500">{l.branch}{l.dirty ? ` · ${l.dirty} changed` : ""}{l.ahead ? ` · ${l.ahead} unpushed` : ""}</span></div>
             ))}
@@ -109,10 +111,34 @@ export default async function Home() {
                 {t.title} <span className="text-zinc-500">{t.entity} · {t.status}{t.repo ? ` · ${t.repo}` : ""}{t.contact ? ` · ${t.contact}` : ""}{t.due ? ` · due ${t.due}` : ""}</span>
                 {t.status === "todo" && t.repo && <DispatchControl taskId={t.id} />}
                 {t.contact && <EmailTaskButton prefill={{ to: t.contact, subject: t.title, entity: t.entity }} />}
+                <TaskActions id={t.id} status={t.status} stuck={d.stuck.some((x) => x.id === t.id)} />
               </div>
             ))}
           </Body>
           <AddTaskForm repos={repos.map((r) => r.path).sort()} />
+        </Card>
+        <Card title="Agent runs (latest)">
+          <Body p={d.runs} empty="no runs yet">
+            {(rows) => rows.map((r) => (
+              <details key={r.id}>
+                <summary className="cursor-pointer truncate">
+                  <span className={r.outcome === "success" ? "text-green-500" : r.outcome ? "text-red-400" : "text-amber-400"}>{r.outcome || "running"}</span>{" "}
+                  {r.summary} <span className="text-zinc-500">{r.started ? rel(r.started) : ""}</span>
+                </summary>
+                <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap text-xs text-zinc-400">{r.result || "no result yet"}</pre>
+              </details>
+            ))}
+          </Body>
+        </Card>
+        <Card title="AI spend (OpenRouter, n8n key)">
+          {d.spend.ok ? (
+            <p>
+              today ${d.spend.data.today.toFixed(2)} · 7d ${d.spend.data.week.toFixed(2)} · month ${d.spend.data.month.toFixed(2)}
+              {d.spend.data.remaining !== null && <span className="text-zinc-500"> · ${d.spend.data.remaining.toFixed(2)} left of ${d.spend.data.limit}</span>}
+            </p>
+          ) : (
+            <p className="text-amber-500">unavailable: {d.spend.error}</p>
+          )}
         </Card>
       </div>
     </main>

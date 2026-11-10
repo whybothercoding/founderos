@@ -60,3 +60,11 @@ export async function rerunFailed(repo: string, id: string) {
   if (!(await ciRepos()).some((r) => r.slug === repo)) throw new Error("repo not in scope");
   await run("gh", ["run", "rerun", id, "--failed", "--repo", repo], { timeout: 30000 });
 }
+
+/** Tail of the failed-job log of a run (for a fix task). */
+export async function failedLog(repo: string, id: string) {
+  if (!/^\d+$/.test(id)) throw new Error("bad run id");
+  if (!(await ciRepos()).some((r) => r.slug === repo)) throw new Error("repo not in scope");
+  const out = await run("gh", ["run", "view", id, "--log-failed", "--repo", repo], { timeout: 45000 }).catch(() => "");
+  return out.trim().slice(-3000);
+}
