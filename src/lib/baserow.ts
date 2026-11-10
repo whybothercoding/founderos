@@ -6,7 +6,7 @@ const TOKEN_VAR = "FOUNDEROS_BASEROW_TOKEN";
 export const TABLES = { tasks: BASEROW.tasksTable, runs: 807, sends: 808, senders: 809 };
 
 export type Task = { id: number; title: string; entity: string; status: string; due: string | null; repo: string; notes: string; contact: string };
-export type Sender = { address: string; name: string; entity: string };
+export type Sender = { address: string; name: string; entity: string; project: string };
 
 async function api<T>(method: string, table: number, rowId?: number, body?: unknown): Promise<T> {
   const token = process.env[TOKEN_VAR];
@@ -84,7 +84,7 @@ export async function purgeOldSends() {
 export async function listSenders(): Promise<Sender[]> {
   const j = await api<{ results: Record<string, unknown>[] }>("GET", TABLES.senders);
   return j.results
-    .map((x) => ({ address: String(x.address ?? "").trim(), name: String(x.name ?? "").trim(), entity: val(x.entity) }))
+    .map((x) => ({ address: String(x.address ?? "").trim(), name: String(x.name ?? "").trim(), entity: val(x.entity), project: String(x.project ?? "").trim() }))
     .filter((s) => s.address)
     .sort((a, b) => a.entity.localeCompare(b.entity) || a.address.localeCompare(b.address));
 }

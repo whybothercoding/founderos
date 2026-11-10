@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 const field = "rounded border border-zinc-700 bg-zinc-950 px-1.5 py-0.5 text-xs";
-type Sender = { address: string; name: string; entity: string };
+type Sender = { address: string; name: string; entity: string; project: string };
 type Prefill = { to: string; subject: string; entity: string };
 
 /** Task rows call this to open Compose prefilled (recipient = task contact, subject = task title). */
@@ -52,7 +52,7 @@ export function Compose({ senders }: { senders: Sender[] }) {
   return (
     <form onSubmit={submit} className="space-y-1.5 border-t border-zinc-800 pt-2">
       <select value={f.from} onChange={edit("from")} className={`${field} w-full`} title="From">
-        {senders.map((x) => <option key={x.address} value={x.address}>{x.entity ? `${x.entity}: ` : ""}{x.name ? `${x.name} <${x.address}>` : x.address}</option>)}
+        {senders.map((x) => <option key={x.address} value={x.address}>{x.project ? `${x.project.split(/[,(]/)[0].trim()} · ` : x.entity ? `${x.entity}: ` : ""}{x.address}</option>)}
       </select>
       <input required type="email" placeholder="to (one recipient)" value={f.to} onChange={edit("to")} className={`${field} w-full`} />
       <input required placeholder="subject" value={f.subject} onChange={edit("subject")} className={`${field} w-full`} />
