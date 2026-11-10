@@ -6,7 +6,7 @@ ROOT="${0:A:h:h}"
 # Agent CLIs read their login from the macOS Keychain under $USER; a bare Shortcut environment may lack it.
 export USER="${USER:-$(id -un)}" LOGNAME="${LOGNAME:-$(id -un)}"
 PORT=4317
-if lsof -ti "tcp:$PORT" >/dev/null 2>&1; then
+if lsof -ti "tcp:$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   [ -z "$FOUNDEROS_NO_OPEN" ] && open "http://127.0.0.1:$PORT"
   exit 0
 fi
