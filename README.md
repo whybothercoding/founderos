@@ -10,7 +10,7 @@ The UI follows the system light/dark setting (demo data shown: the Overview in d
 
 ## Pages
 
-A tab bar switches between six pages. Each tab shows a red badge with the number of items that need you, and the badges refresh every 30 seconds.
+A tab bar switches between seven pages. Each tab shows a red badge with the number of items that need you (SEO: high-urgency open priorities plus sites with crawl errors), and the badges refresh every 30 seconds.
 
 | Page | Contents | Source |
 |---|---|---|
@@ -19,6 +19,7 @@ A tab bar switches between six pages. Each tab shows a red badge with the number
 | **Tasks** | Open tasks with dispatch, close, reopen, reset and email actions; add a task | Baserow |
 | **Code & CI** | Failed CI (newest run of each workflow and branch, last 7 days, across every repo in scope) with re-run and fix-task buttons; open loops: repos with uncommitted or unpushed work, plus tasks stuck in `running` | `gh` CLI; `git` |
 | **Automations** | Failed n8n executions of the last 3 days grouped by workflow; AI spend (today, 7 days, month) | n8n REST API; OpenRouter key usage |
+| **SEO** | The weekly SEO research: priorities from the latest report, Search Console (clicks, impressions, position, unindexed pages), top opportunities, Analytics, technical crawl, keyword rankings, top SERP competitors | Baserow SEO research database (filled weekly by n8n; nothing is fetched from Google here) |
 | **Mail** | Unread, unanswered mail of the last 7 days from non-automated senders (metadata only, nothing stored); compose form | IMAP; SMTP |
 
 The header counts everything that needs attention. `GET /api/needs-me` returns the same count as JSON (for a menu-bar badge, for example). A source that fails shows "unavailable" and never breaks a page.
@@ -84,14 +85,16 @@ One database with four tables (field names matter):
 | `Sends` | `subject` (primary), `to`, `entity`, `status` (sent/failed), `sent_at` |
 | `Senders` | `address` (primary), `name`, `entity`, `project`: the allowed "From" identities, edited in Baserow |
 
+The **SEO** page only reads a second database (research tables written by your own workflows: priorities, Search Console and Analytics weekly summaries, opportunities, crawl summary, SERP snapshots, competitors), so `FOUNDEROS_BASEROW_TOKEN` needs read access to it as well. Table IDs are in `src/lib/seo.ts`.
+
 `entity` is a single select (IndieGoWeb Ltd, Greek sole proprietorship, Personal). Table IDs are set in `src/lib/baserow.ts` and `src/lib/config.ts`.
 
 ## Layout
 
 ```
-src/lib/        one adapter per source (herdr, github, git, n8n, mail, baserow, openrouter)
+src/lib/        one adapter per source (herdr, github, git, n8n, mail, baserow, openrouter, seo)
                 dashboard.ts aggregates them, alerts.ts is the Discord poller, dispatch.ts runs agents
-src/app/        layout (header, tab bar with badges), one folder per page (agents, tasks, code, automation, mail),
+src/app/        layout (header, tab bar with badges), one folder per page (agents, tasks, code, automation, seo, mail),
                 the Overview at page.tsx, shared ui.tsx, and small client components for the buttons
 src/app/api/    guarded endpoints: dispatch, tasks, tasks/status, ci/rerun, ci/fix-task, mail/send, needs-me
 src/lib/demo.ts          fictional data for FOUNDEROS_DEMO=1 (screenshots, trying the UI)

@@ -113,3 +113,15 @@ export async function listRuns(limit = 12): Promise<Run[]> {
 export async function setTaskStatus(id: number, status: "todo" | "running" | "review" | "done") {
   await updateTask(id, { status });
 }
+
+/** Read-only fetch of rows from any table the token can read (used for the SEO research database). */
+export async function readRows(table: number, params: string): Promise<Record<string, unknown>[]> {
+  const token = process.env[TOKEN_VAR];
+  if (!token) throw new Error(`${TOKEN_VAR} not set in the shell`);
+  const r = await fetch(`${BASEROW.url}/api/database/rows/table/${table}/?user_field_names=true&${params}`, {
+    headers: { Authorization: `Token ${token}` },
+    cache: "no-store",
+  });
+  if (!r.ok) throw new Error(`Baserow ${r.status} (table ${table})`);
+  return ((await r.json()) as { results: Record<string, unknown>[] }).results;
+}

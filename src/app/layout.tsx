@@ -4,6 +4,7 @@ import "./globals.css";
 import { alertsEnabled } from "@/lib/alerts";
 import { isDemo } from "@/lib/demo";
 import { loadDashboard } from "@/lib/dashboard";
+import { loadSeo } from "@/lib/seo";
 import { NavLinks } from "./nav";
 import { AutoRefresh } from "./task-controls";
 
@@ -25,14 +26,16 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const d = await loadDashboard();
+  const [d, seo] = await Promise.all([loadDashboard(), loadSeo()]);
+  const total = d.needsMe + seo.badge;
   const n = <T,>(p: { ok: boolean; data?: T[] }) => (p.ok && p.data ? p.data.length : 0);
   const items = [
-    { href: "/", label: "Overview", count: d.needsMe },
+    { href: "/", label: "Overview", count: total },
     { href: "/agents", label: "Agents", count: d.blocked.length },
     { href: "/tasks", label: "Tasks", count: d.dueTasks.length + d.stuck.length },
     { href: "/code", label: "Code & CI", count: n(d.ci) },
     { href: "/automation", label: "Automations", count: n(d.n8n) },
+    { href: "/seo", label: "SEO", count: seo.badge },
     { href: "/mail", label: "Mail", count: n(d.mail) },
   ];
   return (
@@ -45,8 +48,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <AutoRefresh />
           <header className="flex items-baseline justify-between">
             <h1 className="text-xl font-semibold">FounderOS</h1>
-            <p className={d.needsMe ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-500"}>
-              {d.needsMe ? `${d.needsMe} need you` : "nothing needs you"}
+            <p className={total ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-500"}>
+              {total ? `${total} need you` : "nothing needs you"}
               <span className="ml-3 text-xs text-zinc-500">{isDemo() ? "demo data" : `alerts ${alertsEnabled() ? "on" : "off (FOUNDEROS_DISCORD_WEBHOOK not set)"}`}</span>
             </p>
           </header>

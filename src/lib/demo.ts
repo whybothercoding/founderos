@@ -1,6 +1,7 @@
 // FOUNDEROS_DEMO=1: synthetic data for screenshots and trying the UI without any credentials.
 // Everything here is fictional. No source is contacted, no alerts are sent, nothing is written.
 import type { Dashboard } from "./dashboard";
+import type { Seo } from "./seo";
 
 const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
 const ok = <T,>(data: T) => ({ ok: true as const, data });
@@ -54,4 +55,41 @@ export function demoDashboard(): Dashboard {
   const dueTasks = tasks.data.filter((t) => t.due && t.due <= today);
   const needsMe = blocked.length + ci.data.length + n8n.data.length + dueTasks.length + mail.data.length;
   return { agents, ci, loops, n8n, tasks, mail, runs, spend, blocked, dueTasks, stuck: [], needsMe };
+}
+
+export function demoSeo(): Seo {
+  const priorities = ok([
+    { id: 1, site: "shop.example", action: "Page one ranks 4th for a high-intent query; add a comparison table and FAQ to move into the top 3.", keyword: "best standing desk", type: "ranking_drop", urgency: "high", status: "new", searches: 5400 },
+    { id: 2, site: "blog.example", action: "Competitors cover the setup guide topic; write a step-by-step article.", keyword: "how to set up a home office", type: "content_gap", urgency: "medium", status: "new", searches: 2900 },
+    { id: 3, site: "acme.example", action: "A new competitor appears in the top 10 for the brand-adjacent term.", keyword: "", type: "new_competitor", urgency: "low", status: "new", searches: null },
+  ]);
+  const gsc = ok([
+    { site: "shop.example", period: "2026-11-05", clicks: 412, prevClicks: 365, impressions: 18400, prevImpressions: 17100, position: 11.4, topQuery: "standing desk", zeroPages: 6, sitemapUrls: 48 },
+    { site: "blog.example", period: "2026-11-05", clicks: 96, prevClicks: 120, impressions: 5200, prevImpressions: 5900, position: 14.8, topQuery: "home office setup", zeroPages: 12, sitemapUrls: 30 },
+    { site: "acme.example", period: "2026-11-05", clicks: 18, prevClicks: 18, impressions: 840, prevImpressions: 529, position: 10.2, topQuery: "acme widgets", zeroPages: 2, sitemapUrls: 8 },
+  ]);
+  const opps = ok([
+    { query: "standing desk converter", site: "shop.example", page: "https://shop.example/converters", impressions: 1200, position: 8.6, potential: 41, type: "striking_distance" },
+    { query: "ergonomic keyboard tray", site: "shop.example", page: "https://shop.example/trays", impressions: 640, position: 12.1, potential: 22, type: "striking_distance" },
+    { query: "desk cable management", site: "blog.example", page: "https://blog.example/cables", impressions: 980, position: 6.2, potential: 18, type: "ctr_gap" },
+  ]);
+  const ga = ok([
+    { property: "shop.example", period: "2026-11-08", sessions: 2150, prevSessions: 1980, deltaPct: 8.6, keyEvents: 64, channel: "Organic Search", topPage: "/standing-desks" },
+    { property: "blog.example", period: "2026-11-08", sessions: 840, prevSessions: 910, deltaPct: -7.7, keyEvents: 9, channel: "Organic Search", topPage: "/home-office-setup" },
+    { property: "acme.example", period: "2026-11-08", sessions: 42, prevSessions: 38, deltaPct: 10.5, keyEvents: 1, channel: "Direct", topPage: "/" },
+  ]);
+  const crawl = ok([
+    { site: "blog.example", run: "2026-11-08", pages: 142, errors: 3, prevErrors: 1, warnings: 9, topErrors: "broken internal links" },
+    { site: "shop.example", run: "2026-11-08", pages: 310, errors: 0, prevErrors: 0, warnings: 4, topErrors: "" },
+    { site: "acme.example", run: "2026-11-08", pages: 71, errors: 0, prevErrors: 0, warnings: 0, topErrors: "" },
+  ]);
+  const ranks = ok([
+    { site: "shop.example", run: "2026-11-08", tracked: 40, ranked: 22, top10: 7, best: { keyword: "best standing desk", position: 4 } },
+    { site: "blog.example", run: "2026-11-08", tracked: 30, ranked: 11, top10: 2, best: { keyword: "home office setup", position: 7 } },
+  ]);
+  const rivals = ok([
+    { domain: "bigdesks.example", site: "shop.example", appearances: 31, lastSeen: "2026-11-08" },
+    { domain: "officeguide.example", site: "blog.example", appearances: 24, lastSeen: "2026-11-08" },
+  ]);
+  return { priorities, gsc, opps, ga, crawl, ranks, rivals, badge: 2 };
 }

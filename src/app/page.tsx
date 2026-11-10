@@ -1,28 +1,37 @@
 import Link from "next/link";
 import { loadDashboard } from "@/lib/dashboard";
+import { loadSeo } from "@/lib/seo";
 import { Card, Page } from "./ui";
 
 export const dynamic = "force-dynamic";
 
 /** Everything that needs Theo right now, linking to the page that handles it; plus a few numbers at a glance. */
 export default async function Overview() {
-  const d = await loadDashboard();
+  const [d, seo] = await Promise.all([loadDashboard(), loadSeo()]);
   const wf = new Map<string, number>();
   if (d.n8n.ok) for (const e of d.n8n.data) wf.set(e.workflow, (wf.get(e.workflow) ?? 0) + 1);
   const sections = [
     { href: "/agents", title: "Agents blocked", items: d.blocked.map((a) => `${a.agent}: ${a.title || a.cwd}`) },
     { href: "/code", title: "Failed CI", items: d.ci.ok ? d.ci.data.map((r) => `${r.repo.split("/")[1]} · ${r.workflow} (${r.branch})`) : [] },
     { href: "/automation", title: "Failed n8n executions", items: [...wf].map(([w, k]) => (k > 1 ? `${w} ×${k}` : w)) },
+    {
+      href: "/seo",
+      title: "SEO",
+      items: [
+        ...(seo.priorities.ok ? seo.priorities.data.filter((p) => p.urgency === "high" && p.status === "new").map((p) => `${p.site}: ${p.action}`) : []),
+        ...(seo.crawl.ok ? seo.crawl.data.filter((c) => c.errors > 0).map((c) => `${c.site}: ${c.errors} crawl errors`) : []),
+      ],
+    },
     { href: "/mail", title: "Waiting for a reply", items: d.mail.ok ? d.mail.data.map((m) => `${m.from}: ${m.subject}`) : [] },
     { href: "/tasks", title: "Tasks due or stuck", items: [...d.dueTasks.map((t) => `due: ${t.title}`), ...d.stuck.map((t) => `stuck: ${t.title}`)] },
   ].filter((s) => s.items.length);
   const sources = (
-    [["Agents", d.agents], ["CI", d.ci], ["Open loops", d.loops], ["n8n", d.n8n], ["Tasks", d.tasks], ["Mail", d.mail], ["Runs", d.runs], ["AI spend", d.spend]] as [string, { ok: boolean; error?: string }][]
+    [["Agents", d.agents], ["CI", d.ci], ["Open loops", d.loops], ["n8n", d.n8n], ["Tasks", d.tasks], ["Mail", d.mail], ["Runs", d.runs], ["AI spend", d.spend], ["SEO priorities", seo.priorities], ["SEO crawl", seo.crawl]] as [string, { ok: boolean; error?: string }][]
   ).filter(([, p]) => !p.ok);
   const working = d.agents.ok ? d.agents.data.filter((a) => a.status === "working").length : null;
   return (
     <Page>
-      <Card title="Needs you" count={d.needsMe}>
+      <Card title="Needs you" count={d.needsMe + seo.badge}>
         {sections.length === 0 && <p className="text-zinc-600 dark:text-zinc-400">Nothing needs you right now.</p>}
         {sections.map((s) => (
           <div key={s.href}>
