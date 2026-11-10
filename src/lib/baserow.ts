@@ -3,9 +3,10 @@ import { BASEROW } from "./config";
 // Row access uses a Baserow database token (scoped to the FounderOS database only) read from the shell by reference.
 // Deliberate deviation from the "rows via MCP" rule: a server process cannot call MCP tools.
 const TOKEN_VAR = "FOUNDEROS_BASEROW_TOKEN";
-export const TABLES = { tasks: BASEROW.tasksTable, runs: 807, sends: 808 };
+export const TABLES = { tasks: BASEROW.tasksTable, runs: 807, sends: 808, senders: 809 };
 
-export type Task = { id: number; title: string; entity: string; status: string; due: string | null; repo: string; notes: string };
+export type Task = { id: number; title: string; entity: string; status: string; due: string | null; repo: string; notes: string; contact: string };
+export type Sender = { address: string; name: string; entity: string };
 
 async function api<T>(method: string, table: number, rowId?: number, body?: unknown): Promise<T> {
   const token = process.env[TOKEN_VAR];
@@ -30,6 +31,7 @@ const toTask = (x: Record<string, unknown>): Task => ({
   due: (x.due as string) || null,
   repo: String(x.repo ?? ""),
   notes: String(x.notes ?? ""),
+  contact: String(x.contact ?? ""),
 });
 
 export async function openTasks(): Promise<Task[]> {
@@ -41,7 +43,7 @@ export async function getTask(id: number) {
   return toTask(await api<Record<string, unknown>>("GET", TABLES.tasks, id));
 }
 
-export async function createTask(t: { title: string; entity: string; repo: string; notes: string }) {
+export async function createTask(t: { title: string; entity: string; repo: string; notes: string; contact: string }) {
   return toTask(await api<Record<string, unknown>>("POST", TABLES.tasks, undefined, { ...t, status: "todo" }));
 }
 
@@ -58,4 +60,31 @@ export async function createRun(r: { summary: string; taskId: number; agent: str
 
 export async function updateRun(id: number, patch: Record<string, unknown>) {
   await api("PATCH", TABLES.runs, id, patch);
+}
+
+const SEND_RETENTION_DAYS = 90; // GDPR: recipients are personal data, keep the audit log only briefly
+
+export async function logSend(s: { subject: string; to: string; entity: string; status: "sent" | "failed" }) {
+  await api("POST", TABLES.sends, undefined, { ...s, sent_at: new Date().toISOString() });
+}
+
+let lastPurge = 0;
+/** Delete Sends rows older than the retention window (at most every 6h). */
+export async function purgeOldSends() {
+  if (Date.now() - lastPurge < 6 * 3600_000) return 0;
+  lastPurge = Date.now();
+  const j = await api<{ results: { id: number; sent_at: string | null }[] }>("GET", TABLES.sends);
+  const cutoff = Date.now() - SEND_RETENTION_DAYS * 864e5;
+  const old = j.results.filter((r) => r.sent_at && new Date(r.sent_at).getTime() < cutoff);
+  for (const r of old) await api("DELETE", TABLES.sends, r.id);
+  return old.length;
+}
+
+/** Allowed "From" identities, edited in Baserow (table Senders). Not secrets; the SMTP login decides what the provider accepts. */
+export async function listSenders(): Promise<Sender[]> {
+  const j = await api<{ results: Record<string, unknown>[] }>("GET", TABLES.senders);
+  return j.results
+    .map((x) => ({ address: String(x.address ?? "").trim(), name: String(x.name ?? "").trim(), entity: val(x.entity) }))
+    .filter((s) => s.address)
+    .sort((a, b) => a.entity.localeCompare(b.entity) || a.address.localeCompare(b.address));
 }

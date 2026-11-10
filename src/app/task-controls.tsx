@@ -47,13 +47,13 @@ export function DispatchControl({ taskId }: { taskId: number }) {
 export function AddTaskForm({ repos }: { repos: string[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ title: "", entity: ENTITIES[0], repo: "", notes: "" });
+  const [f, setF] = useState({ title: "", entity: ENTITIES[0], repo: "", notes: "", contact: "" });
   const [err, setErr] = useState("");
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const m = await post("/api/tasks", f);
     if (m) return setErr(m);
-    setF({ ...f, title: "", notes: "" });
+    setF({ ...f, title: "", notes: "", contact: "" });
     setErr("");
     setOpen(false);
     router.refresh();
@@ -62,6 +62,7 @@ export function AddTaskForm({ repos }: { repos: string[] }) {
   return (
     <form onSubmit={submit} className="space-y-1.5 border-t border-zinc-800 pt-2">
       <input required autoFocus placeholder="title" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} className={`${field} w-full`} />
+      <input type="email" placeholder="contact email for this task (optional)" value={f.contact} onChange={(e) => setF({ ...f, contact: e.target.value })} className={`${field} w-full`} />
       <textarea placeholder="notes for the agent (optional)" value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} className={`${field} w-full`} rows={2} />
       <div className="flex flex-wrap gap-1.5">
         <select value={f.entity} onChange={(e) => setF({ ...f, entity: e.target.value })} className={field}>{ENTITIES.map((x) => <option key={x}>{x}</option>)}</select>

@@ -17,6 +17,7 @@ export async function checkAndAlert() {
     { prefix: "blocked", ok: d.agents.ok, items: d.blocked.map((a) => [`blocked:${a.pane}`, `🛑 ${a.agent} blocked: ${a.title || a.cwd}`]) },
     { prefix: "ci", ok: d.ci.ok, items: d.ci.ok ? d.ci.data.map((r) => [`ci:${r.id}`, `❌ CI ${r.repo} · ${r.workflow} (${r.branch})`]) : [] },
     { prefix: "n8n", ok: d.n8n.ok, items: d.n8n.ok ? d.n8n.data.map((e) => [`n8n:${e.id}`, `⚠️ n8n failed: ${e.workflow}`]) : [] },
+    { prefix: "mail", ok: d.mail.ok, items: d.mail.ok ? d.mail.data.map((m) => [`mail:${m.id}`, `📧 reply needed: ${m.from} — ${m.subject.slice(0, 60)}`]) : [] },
     { prefix: "due", ok: d.tasks.ok, items: d.dueTasks.map((t) => [`due:${t.id}:${t.due}`, `📌 due: ${t.title}`]) },
   ];
 

@@ -4,6 +4,8 @@ import type { Panel } from "@/lib/exec";
 import { alertsEnabled } from "@/lib/alerts";
 import { localRepos } from "@/lib/git";
 import { RerunButton } from "./rerun-button";
+import { listSenders } from "@/lib/baserow";
+import { Compose, EmailTaskButton } from "./compose";
 import { AddTaskForm, AutoRefresh, DispatchControl } from "./task-controls";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +37,7 @@ function Body<T>({ p, empty, children }: { p: Panel<T[]>; empty: string; childre
 }
 
 export default async function Home() {
-  const [d, repos] = await Promise.all([loadDashboard(), localRepos()]);
+  const [d, repos, senders] = await Promise.all([loadDashboard(), localRepos(), listSenders().catch(() => [])]);
   return (
     <main className="mx-auto max-w-6xl space-y-4 p-6">
       <AutoRefresh />
@@ -92,12 +94,21 @@ export default async function Home() {
             ))}
           </Body>
         </Card>
+        <Card title="Inbox: needs reply (7d, unread)" count={d.mail.ok ? d.mail.data.length : undefined}>
+          <Body p={d.mail} empty="nothing waiting">
+            {(rows) => rows.slice(0, 10).map((m) => (
+              <div key={m.id} className="truncate">{m.from} <span className="text-zinc-500">{m.subject} · {rel(m.date)}</span></div>
+            ))}
+          </Body>
+          <Compose senders={senders} />
+        </Card>
         <Card title="Tasks (Baserow)" count={d.dueTasks.length}>
           <Body p={d.tasks} empty="no open tasks">
             {(rows) => rows.map((t) => (
               <div key={t.id}>
-                {t.title} <span className="text-zinc-500">{t.entity} · {t.status}{t.repo ? ` · ${t.repo}` : ""}{t.due ? ` · due ${t.due}` : ""}</span>
+                {t.title} <span className="text-zinc-500">{t.entity} · {t.status}{t.repo ? ` · ${t.repo}` : ""}{t.contact ? ` · ${t.contact}` : ""}{t.due ? ` · due ${t.due}` : ""}</span>
                 {t.status === "todo" && t.repo && <DispatchControl taskId={t.id} />}
+                {t.contact && <EmailTaskButton prefill={{ to: t.contact, subject: t.title, entity: t.entity }} />}
               </div>
             ))}
           </Body>
