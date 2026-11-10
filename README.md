@@ -4,6 +4,8 @@ A local dashboard and agent dispatcher for a solo operator who runs many project
 
 It sits on top of [Herdr](https://herdr.dev) (the terminal workspace manager for AI coding agents) and works with **Claude Code, Codex, Grok and Antigravity**. It runs on your machine only and reads every source live. There is nothing to sync and no automation workflows to maintain.
 
+![FounderOS dashboard, shown with the built-in demo data](docs/screenshot.png)
+
 ## What it shows
 
 | Panel | Source |
@@ -46,6 +48,8 @@ npx next start -H 127.0.0.1 -p 4317     # then open http://127.0.0.1:4317
 
 `scripts/start.sh` does this for you and is meant for an Apple Shortcut ("Run Shell Script"): it runs inside an interactive zsh so credentials from your shell are available, adds `USER`, Homebrew and nvm's Node to a bare Shortcut PATH, builds, serves on localhost only and opens the browser. It does nothing if the port is already in use. Set `FOUNDEROS_NO_OPEN=1` to skip opening the browser.
 
+To try the UI without any credentials, start it with `FOUNDEROS_DEMO=1`: it shows fictional data (as in the screenshot above), contacts no service, sends no alerts and writes nothing.
+
 The app is deliberately bound to `127.0.0.1`. It reads local sessions and repos, so it should never be exposed or deployed to a hosting provider.
 
 ## Configuration
@@ -85,6 +89,7 @@ src/lib/        one adapter per source (herdr, github, git, n8n, mail, baserow, 
                 dashboard.ts aggregates them, alerts.ts is the Discord poller, dispatch.ts runs agents
 src/app/        the page (server component) and small client components for the buttons
 src/app/api/    guarded endpoints: dispatch, tasks, tasks/status, ci/rerun, ci/fix-task, mail/send, needs-me
+src/lib/demo.ts          fictional data for FOUNDEROS_DEMO=1 (screenshots, trying the UI)
 src/instrumentation.ts   starts the alert poller with the server
 scripts/start.sh         launcher for an Apple Shortcut
 ```
