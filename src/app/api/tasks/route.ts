@@ -1,11 +1,11 @@
 import { createTask } from "@/lib/baserow";
 import { ENTITIES } from "@/lib/config";
 import { localRepos } from "@/lib/git";
-import { sameOrigin } from "@/lib/origin";
+import { readJson, sameOrigin } from "@/lib/origin";
 
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return Response.json({ error: "forbidden" }, { status: 403 });
-  const b = (await req.json()) as { title?: string; entity?: string; repo?: string; notes?: string; contact?: string };
+  const b = (await readJson(req)) as { title?: string; entity?: string; repo?: string; notes?: string; contact?: string };
   const title = String(b.title ?? "").trim().slice(0, 200);
   if (!title) return Response.json({ error: "title required" }, { status: 400 });
   if (!ENTITIES.includes(String(b.entity))) return Response.json({ error: "bad entity" }, { status: 400 });

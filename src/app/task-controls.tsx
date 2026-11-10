@@ -67,7 +67,7 @@ export function AddTaskForm({ repos }: { repos: string[] }) {
       <div className="flex flex-wrap gap-1.5">
         <select value={f.entity} onChange={(e) => setF({ ...f, entity: e.target.value })} className={field}>{ENTITIES.map((x) => <option key={x}>{x}</option>)}</select>
         <select value={f.repo} onChange={(e) => setF({ ...f, repo: e.target.value })} className={field}>
-          <option value="">no repo (can't dispatch)</option>
+          <option value="">no repo (can&apos;t dispatch)</option>
           {repos.map((r) => <option key={r}>{r}</option>)}
         </select>
         <button className="rounded border border-zinc-400 dark:border-zinc-600 px-2 text-xs hover:text-black dark:hover:text-white">add</button>

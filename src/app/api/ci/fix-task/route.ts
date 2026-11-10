@@ -1,12 +1,12 @@
 import { createTask } from "@/lib/baserow";
 import { ciRepos, failedLog } from "@/lib/github";
 import { localRepos } from "@/lib/git";
-import { sameOrigin } from "@/lib/origin";
+import { readJson, sameOrigin } from "@/lib/origin";
 
 // Turns a failed CI run into a Baserow task (with the failed-job log tail) that can then be dispatched to an agent.
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return Response.json({ error: "forbidden" }, { status: 403 });
-  const { repo, id, workflow, branch } = (await req.json()) as { repo?: string; id?: string; workflow?: string; branch?: string };
+  const { repo, id, workflow, branch } = (await readJson(req)) as { repo?: string; id?: string; workflow?: string; branch?: string };
   try {
     const r = (await ciRepos()).find((x) => x.slug === repo);
     if (!r) throw new Error("repo not in scope");

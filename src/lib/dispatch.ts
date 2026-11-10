@@ -40,7 +40,9 @@ export async function dispatch(taskId: number, agent: string) {
 
   active.add(taskId);
   let runId: number;
+  const dir = join(process.cwd(), ".state", "runs");
   try {
+    await mkdir(dir, { recursive: true });
     runId = await createRun({ summary: `${a}: ${task.title}`.slice(0, 250), taskId, agent: a });
     await updateTask(taskId, { status: "running" });
   } catch (e) {
@@ -48,16 +50,15 @@ export async function dispatch(taskId: number, agent: string) {
     throw e;
   }
 
-  const dir = join(process.cwd(), ".state", "runs");
-  await mkdir(dir, { recursive: true });
   const logFile = join(dir, `${runId}.log`);
   const lastMsgFile = join(dir, `${runId}.last.txt`);
   const log = createWriteStream(logFile);
+  log.on("error", (e) => console.error("[dispatch] log write failed", runId, e.message));
   const prompt = PREFIX + task.title + (task.notes ? `\n\n${task.notes}` : "");
   const [cmd, args] = command(a, prompt, cwd, lastMsgFile);
   // Agents must not inherit FounderOS's own credentials.
   const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("FOUNDEROS_"))) as NodeJS.ProcessEnv;
-  const child = spawn(cmd, args, { cwd, env, stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(/* turbopackIgnore: true */ cmd, args, { cwd, env, stdio: ["ignore", "pipe", "pipe"] });
   let timedOut = false;
   const timer = setTimeout(() => { timedOut = true; child.kill("SIGTERM"); }, TIMEOUT_MS);
   let tail = "";
@@ -65,7 +66,10 @@ export async function dispatch(taskId: number, agent: string) {
   child.stdout.on("data", onData);
   child.stderr.on("data", onData);
 
+  let finished = false; // `error` and `close` can both fire
   const finish = async (code: number | null, err?: string) => {
+    if (finished) return;
+    finished = true;
     clearTimeout(timer);
     log.end();
     active.delete(taskId);

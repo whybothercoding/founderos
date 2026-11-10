@@ -1,9 +1,9 @@
 import { sendMail } from "@/lib/mail";
-import { sameOrigin } from "@/lib/origin";
+import { readJson, sameOrigin } from "@/lib/origin";
 
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return Response.json({ error: "forbidden" }, { status: 403 });
-  const b = (await req.json()) as { to?: string; subject?: string; body?: string; from?: string };
+  const b = (await readJson(req)) as { to?: string; subject?: string; body?: string; from?: string };
   try {
     return Response.json({ ok: true, ...(await sendMail({ to: String(b.to ?? ""), subject: String(b.subject ?? ""), body: String(b.body ?? ""), from: String(b.from ?? "") })) });
   } catch (e) {
