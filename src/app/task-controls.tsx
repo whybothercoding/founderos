@@ -37,7 +37,7 @@ export function DispatchControl({ taskId }: { taskId: number }) {
       <select value={agent} onChange={(e) => { setAgent(e.target.value); setS("idle"); }} className={field}>
         {AGENTS.map((a) => <option key={a}>{a}</option>)}
       </select>
-      <button onClick={go} disabled={s === "busy"} className={`rounded border px-1.5 text-xs ${s === "confirm" ? "border-amber-600 dark:border-amber-500 text-amber-600 dark:text-amber-400" : "border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
+      <button onClick={go} disabled={s === "busy"} className={`rounded border px-1.5 text-xs ${s === "confirm" ? "border-amber-600 dark:border-amber-500 text-amber-600 dark:text-amber-400" : "border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"}`}>
         {s === "idle" ? "run" : s === "confirm" ? "confirm run?" : s === "busy" ? "…" : s}
       </button>
     </span>
@@ -88,7 +88,7 @@ export function TaskActions({ id, status, stuck }: { id: number; status: string;
     setBusy(false);
     router.refresh();
   }
-  const btn = "ml-2 rounded border border-zinc-300 dark:border-zinc-700 px-1.5 text-xs text-zinc-400 dark:text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white";
+  const btn = "ml-2 rounded border border-zinc-300 dark:border-zinc-700 px-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white";
   if (status === "review") return <><button disabled={busy} onClick={() => set("done")} className={btn}>done</button><button disabled={busy} onClick={() => set("todo")} className={btn}>reopen</button></>;
   if (stuck) return <button disabled={busy} onClick={() => set("todo")} className={`${btn} border-amber-600 text-amber-600 dark:text-amber-400`}>reset stuck</button>;
   if (status === "todo") return <button disabled={busy} onClick={() => set("done")} className={btn}>done</button>;

@@ -1,4 +1,4 @@
-import { panel } from "./exec";
+import { cached, panel } from "./exec";
 import { herdrAgents } from "./herdr";
 import { failedRuns } from "./github";
 import { openLoops } from "./git";
@@ -37,4 +37,5 @@ async function loadLive() {
 
 export type Dashboard = Awaited<ReturnType<typeof loadLive>>;
 
-export const loadDashboard = async (): Promise<Dashboard> => (isDemo() ? demoDashboard() : loadLive());
+// 15 s memo: the layout (nav badges) and the page share one load per navigation, the alert poller reuses it too.
+export const loadDashboard = async (): Promise<Dashboard> => (isDemo() ? demoDashboard() : cached("dashboard", 15_000, loadLive));

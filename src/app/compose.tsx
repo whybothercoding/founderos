@@ -1,36 +1,30 @@
 "use client";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useState } from "react";
 
 const field = "rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-1.5 py-0.5 text-xs";
 type Sender = { address: string; name: string; entity: string; project: string };
 type Prefill = { to: string; subject: string; entity: string };
 
-/** Task rows call this to open Compose prefilled (recipient = task contact, subject = task title). */
+/** Task rows link to the Mail page with recipient (task contact) and subject (task title) prefilled. */
 export function EmailTaskButton({ prefill }: { prefill: Prefill }) {
   return (
-    <button onClick={() => window.dispatchEvent(new CustomEvent("fos-compose", { detail: prefill }))} title={`email ${prefill.to}`} className="ml-2 rounded border border-zinc-300 dark:border-zinc-700 px-1.5 text-xs text-zinc-400 dark:text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white">
+    <Link href={`/mail?${new URLSearchParams(prefill)}`} title={`email ${prefill.to}`} className="ml-2 rounded border border-zinc-300 dark:border-zinc-700 px-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white">
       ✉
-    </button>
+    </Link>
   );
 }
 
-export function Compose({ senders }: { senders: Sender[] }) {
-  const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ to: "", subject: "", body: "", from: senders[0]?.address ?? "" });
+export function Compose({ senders, initial }: { senders: Sender[]; initial?: Prefill }) {
+  const [open, setOpen] = useState(!!initial);
+  const [f, setF] = useState({
+    to: initial?.to ?? "",
+    subject: initial?.subject ?? "",
+    body: "",
+    from: (senders.find((x) => x.entity === initial?.entity) ?? senders[0])?.address ?? "",
+  });
   const [s, setS] = useState<"idle" | "confirm" | "busy" | "sent">("idle");
   const [err, setErr] = useState("");
-
-  useEffect(() => {
-    const h = (e: Event) => {
-      const d = (e as CustomEvent<Prefill>).detail;
-      const match = senders.find((x) => x.entity === d.entity) ?? senders[0];
-      setF((p) => ({ ...p, to: d.to, subject: d.subject, from: match?.address ?? p.from }));
-      setOpen(true);
-      setS("idle");
-    };
-    window.addEventListener("fos-compose", h);
-    return () => window.removeEventListener("fos-compose", h);
-  }, [senders]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

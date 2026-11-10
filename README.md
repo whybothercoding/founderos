@@ -4,31 +4,31 @@ A local dashboard and agent dispatcher for a solo operator who runs many project
 
 It sits on top of [Herdr](https://herdr.dev) (the terminal workspace manager for AI coding agents) and works with **Claude Code, Codex, Grok and Antigravity**. It runs on your machine only and reads every source live. There is nothing to sync and no automation workflows to maintain.
 
-<p><img src="docs/screenshot.png" alt="FounderOS dashboard in dark mode, with the built-in demo data" width="49%"> <img src="docs/screenshot-light.png" alt="The same dashboard in light mode" width="49%"></p>
+<p><img src="docs/screenshot.png" alt="FounderOS Overview page in dark mode, with the built-in demo data" width="49%"> <img src="docs/screenshot-light.png" alt="The Code and CI page in light mode" width="49%"></p>
 
-The UI follows the system light/dark setting (demo data shown).
+The UI follows the system light/dark setting (demo data shown: the Overview in dark mode, the Code & CI page in light mode).
 
-## What it shows
+## Pages
 
-| Panel | Source |
-|---|---|
-| **Agents** | Herdr: every agent pane with its state (idle, working, blocked, done) |
-| **Failed CI (7d)** | GitHub via the `gh` CLI: the newest run of each workflow and branch, across every repo in scope |
-| **Failed n8n executions (3d)** | n8n REST API, grouped by workflow |
-| **Open loops** | `git status` of every repo under `~/Documents`, plus tasks stuck in `running` |
-| **Inbox: needs reply** | IMAP, read-only: unread, unanswered mail of the last 7 days from non-automated senders (metadata only, nothing stored) |
-| **Tasks** | Baserow |
-| **Agent runs** | Baserow: history, outcome and result of every dispatched run |
-| **AI spend** | OpenRouter key usage (today, 7 days, month) |
+A tab bar switches between six pages. Each tab shows a red badge with the number of items that need you, and the badges refresh every 30 seconds.
 
-The header counts everything that needs attention. `GET /api/needs-me` returns the same count as JSON (for a menu-bar badge, for example). A source that fails shows "unavailable" and never breaks the page.
+| Page | Contents | Source |
+|---|---|---|
+| **Overview** | Everything that needs you right now, grouped and linked to the page that handles it, plus a few numbers at a glance and any unavailable sources | all of the below |
+| **Agents** | Every agent pane with its state (idle, working, blocked, done); the latest agent runs with outcome and result | Herdr; Baserow |
+| **Tasks** | Open tasks with dispatch, close, reopen, reset and email actions; add a task | Baserow |
+| **Code & CI** | Failed CI (newest run of each workflow and branch, last 7 days, across every repo in scope) with re-run and fix-task buttons; open loops: repos with uncommitted or unpushed work, plus tasks stuck in `running` | `gh` CLI; `git` |
+| **Automations** | Failed n8n executions of the last 3 days grouped by workflow; AI spend (today, 7 days, month) | n8n REST API; OpenRouter key usage |
+| **Mail** | Unread, unanswered mail of the last 7 days from non-automated senders (metadata only, nothing stored); compose form | IMAP; SMTP |
+
+The header counts everything that needs attention. `GET /api/needs-me` returns the same count as JSON (for a menu-bar badge, for example). A source that fails shows "unavailable" and never breaks a page.
 
 ## What it does
 
 - **Alerts:** a background poller (every 3 minutes) posts only *new* items to a Discord webhook: a newly blocked agent, a failed CI run, a failed n8n execution, mail needing a reply, a task that is due or stuck. The first run only records the current state.
 - **Dispatch:** a `todo` task with a repo runs headless in `claude -p`, `codex exec`, `grok -p` or `agy -p`. Agents get an edit-only permission mode (no unattended shell or network), the prompt forbids commit and push, and a run is killed after 30 minutes. The result lands in the task's Runs row, and the task moves to `review` or back to `todo`.
 - **CI:** re-run failed jobs, or turn a failed run into a task carrying the failed-job log tail.
-- **Mail:** compose a plain-text email to one recipient from a sender chosen in Baserow. Every attempt is logged and purged after 90 days. A task's contact address prefills the form.
+- **Mail:** compose a plain-text email to one recipient from a sender chosen in Baserow. Every attempt is logged and purged after 90 days. A task's ✉ button opens the Mail page with the contact address and task title prefilled.
 - **Tasks:** add, close, reopen, reset stuck.
 
 Every mutating endpoint accepts same-origin requests only and checks repo, agent, sender and ids against allow-lists. Every send, re-run and dispatch needs a confirm click.
@@ -91,7 +91,8 @@ One database with four tables (field names matter):
 ```
 src/lib/        one adapter per source (herdr, github, git, n8n, mail, baserow, openrouter)
                 dashboard.ts aggregates them, alerts.ts is the Discord poller, dispatch.ts runs agents
-src/app/        the page (server component) and small client components for the buttons
+src/app/        layout (header, tab bar with badges), one folder per page (agents, tasks, code, automation, mail),
+                the Overview at page.tsx, shared ui.tsx, and small client components for the buttons
 src/app/api/    guarded endpoints: dispatch, tasks, tasks/status, ci/rerun, ci/fix-task, mail/send, needs-me
 src/lib/demo.ts          fictional data for FOUNDEROS_DEMO=1 (screenshots, trying the UI)
 src/instrumentation.ts   starts the alert poller with the server
