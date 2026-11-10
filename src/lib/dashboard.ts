@@ -7,8 +7,9 @@ import { listRuns, openTasks } from "./baserow";
 import { activeTaskIds } from "./dispatch";
 import { aiSpend } from "./openrouter";
 import { needsReply } from "./mail";
+import { demoDashboard, isDemo } from "./demo";
 
-export async function loadDashboard() {
+async function loadLive() {
   const [agents, ci, loops, n8n, tasks, mail, runs, spend] = await Promise.all([
     panel(herdrAgents),
     panel(failedRuns),
@@ -33,3 +34,7 @@ export async function loadDashboard() {
     (mail.ok ? mail.data.length : 0);
   return { agents, ci, loops, n8n, tasks, mail, runs, spend, blocked, dueTasks, stuck, needsMe };
 }
+
+export type Dashboard = Awaited<ReturnType<typeof loadLive>>;
+
+export const loadDashboard = async (): Promise<Dashboard> => (isDemo() ? demoDashboard() : loadLive());

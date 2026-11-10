@@ -1,6 +1,6 @@
 // Background alert poller; runs only in the long-lived local server.
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  if (process.env.NEXT_RUNTIME !== "nodejs" || process.env.FOUNDEROS_DEMO === "1") return;
   const g = globalThis as { __fosAlerts?: boolean };
   if (g.__fosAlerts) return;
   g.__fosAlerts = true;

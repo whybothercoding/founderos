@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { loadDashboard } from "@/lib/dashboard";
 import type { Panel } from "@/lib/exec";
 import { alertsEnabled } from "@/lib/alerts";
+import { DEMO_REPOS, DEMO_SENDERS, isDemo } from "@/lib/demo";
 import { localRepos } from "@/lib/git";
 import { FixTaskButton, RerunButton } from "./rerun-button";
 import { listSenders } from "@/lib/baserow";
@@ -37,7 +38,12 @@ function Body<T>({ p, empty, children }: { p: Panel<T[]>; empty: string; childre
 }
 
 export default async function Home() {
-  const [d, repos, senders] = await Promise.all([loadDashboard(), localRepos(), listSenders().catch(() => [])]);
+  const demo = isDemo();
+  const [d, repos, senders] = await Promise.all([
+    loadDashboard(),
+    demo ? DEMO_REPOS.map((path) => ({ path })) : localRepos(),
+    demo ? DEMO_SENDERS : listSenders().catch(() => []),
+  ]);
   return (
     <main className="mx-auto max-w-6xl space-y-4 p-6">
       <AutoRefresh />
@@ -45,7 +51,7 @@ export default async function Home() {
         <h1 className="text-xl font-semibold">FounderOS</h1>
         <p className={d.needsMe ? "text-red-400" : "text-green-500"}>
           {d.needsMe ? `${d.needsMe} need you` : "nothing needs you"}
-          <span className="ml-3 text-xs text-zinc-500">alerts {alertsEnabled() ? "on" : "off (FOUNDEROS_DISCORD_WEBHOOK not set)"}</span>
+          <span className="ml-3 text-xs text-zinc-500">{demo ? "demo data" : `alerts ${alertsEnabled() ? "on" : "off (FOUNDEROS_DISCORD_WEBHOOK not set)"}`}</span>
         </p>
       </header>
       <div className="grid gap-4 md:grid-cols-2">
