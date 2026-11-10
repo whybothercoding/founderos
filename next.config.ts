@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
+// cacheComponents off: every page is a live read of local state, nothing is cacheable.
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
   turbopack: {
     rules: {
       "*.css": {

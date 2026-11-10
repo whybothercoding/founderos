@@ -1,69 +1,109 @@
-import Image from "next/image";
+import type { ReactNode } from "react";
+import { loadDashboard } from "@/lib/dashboard";
+import type { Panel } from "@/lib/exec";
+import { alertsEnabled } from "@/lib/alerts";
+import { localRepos } from "@/lib/git";
+import { RerunButton } from "./rerun-button";
+import { AddTaskForm, AutoRefresh, DispatchControl } from "./task-controls";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+const dot: Record<string, string> = {
+  blocked: "bg-red-500", working: "bg-amber-400", idle: "bg-zinc-500", done: "bg-green-500", unknown: "bg-zinc-700",
+};
+const rel = (iso: string) => {
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  return m < 60 ? `${m}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`;
+};
+
+function Card({ title, count, children }: { title: string; count?: number; children: ReactNode }) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <section className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
+      <h2 className="mb-3 flex items-baseline justify-between text-sm font-medium text-zinc-300">
+        {title}
+        {count !== undefined && <span className={count ? "text-red-400" : "text-zinc-600"}>{count}</span>}
+      </h2>
+      <div className="space-y-1.5 text-sm">{children}</div>
+    </section>
+  );
+}
+
+function Body<T>({ p, empty, children }: { p: Panel<T[]>; empty: string; children: (rows: T[]) => ReactNode }) {
+  if (!p.ok) return <p className="text-amber-500">unavailable: {p.error}</p>;
+  if (!p.data.length) return <p className="text-zinc-600">{empty}</p>;
+  return <>{children(p.data)}</>;
+}
+
+export default async function Home() {
+  const [d, repos] = await Promise.all([loadDashboard(), localRepos()]);
+  return (
+    <main className="mx-auto max-w-6xl space-y-4 p-6">
+      <AutoRefresh />
+      <header className="flex items-baseline justify-between">
+        <h1 className="text-xl font-semibold">FounderOS</h1>
+        <p className={d.needsMe ? "text-red-400" : "text-green-500"}>
+          {d.needsMe ? `${d.needsMe} need you` : "nothing needs you"}
+          <span className="ml-3 text-xs text-zinc-500">alerts {alertsEnabled() ? "on" : "off (FOUNDEROS_DISCORD_WEBHOOK not set)"}</span>
+        </p>
+      </header>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card title="Agents (Herdr)" count={d.blocked.length}>
+          <Body p={d.agents} empty="no agent panes">
+            {(rows) => rows.map((a) => (
+              <div key={a.pane} className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${dot[a.status]}`} />
+                <span className="w-14 text-zinc-400">{a.agent}</span>
+                <span className="truncate">{a.title || a.cwd.replace(/^.*\/Documents\/?/, "~/")}</span>
+                <span className="ml-auto text-zinc-500">{a.status}</span>
+              </div>
+            ))}
+          </Body>
+        </Card>
+        <Card title="Failed CI (7d)" count={d.ci.ok ? d.ci.data.length : undefined}>
+          <Body p={d.ci} empty="no failed runs">
+            {(rows) => rows.map((r) => (
+              <div key={r.url}>
+                <a href={r.url} target="_blank" className="hover:text-white">
+                  {r.repo.split("/")[1]} · {r.workflow} <span className="text-zinc-500">{r.branch} · {rel(r.when)}</span>
+                </a>
+                <RerunButton repo={r.repo} id={r.id} />
+              </div>
+            ))}
+          </Body>
+        </Card>
+        <Card title="Failed n8n executions (3d)" count={d.n8n.ok ? d.n8n.data.length : undefined}>
+          <Body p={d.n8n} empty="no failures">
+            {(rows) => {
+              const byWf = new Map<string, { n: number; last: string }>();
+              for (const e of rows) {
+                const g = byWf.get(e.workflow);
+                byWf.set(e.workflow, { n: (g?.n ?? 0) + 1, last: g && g.last > e.when ? g.last : e.when });
+              }
+              return [...byWf].map(([wf, g]) => (
+                <div key={wf}>{wf} <span className="text-zinc-500">{g.n}× · last {rel(g.last)}</span></div>
+              ));
+            }}
+          </Body>
+        </Card>
+        <Card title="Open loops (git)" count={d.loops.ok ? d.loops.data.length : undefined}>
+          <Body p={d.loops} empty="all repos clean and pushed">
+            {(rows) => rows.map((l) => (
+              <div key={l.path}>{l.path} <span className="text-zinc-500">{l.branch}{l.dirty ? ` · ${l.dirty} changed` : ""}{l.ahead ? ` · ${l.ahead} unpushed` : ""}</span></div>
+            ))}
+          </Body>
+        </Card>
+        <Card title="Tasks (Baserow)" count={d.dueTasks.length}>
+          <Body p={d.tasks} empty="no open tasks">
+            {(rows) => rows.map((t) => (
+              <div key={t.id}>
+                {t.title} <span className="text-zinc-500">{t.entity} · {t.status}{t.repo ? ` · ${t.repo}` : ""}{t.due ? ` · due ${t.due}` : ""}</span>
+                {t.status === "todo" && t.repo && <DispatchControl taskId={t.id} />}
+              </div>
+            ))}
+          </Body>
+          <AddTaskForm repos={repos.map((r) => r.path).sort()} />
+        </Card>
+      </div>
+    </main>
   );
 }
