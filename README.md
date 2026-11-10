@@ -102,4 +102,4 @@ Next.js 16 (App Router), React 19, Tailwind 4, `nodemailer`, `imapflow`. `cacheC
 
 ## License
 
-Private, personal tooling. No license granted.
+[MIT](LICENSE). This is personal tooling built around one setup: before reusing it, change the Baserow host and table IDs, the GitHub owners and entity names in `src/lib/config.ts` and `src/lib/baserow.ts`, and create the Baserow tables described above.
