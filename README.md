@@ -46,7 +46,7 @@ npm run build
 npx next start -H 127.0.0.1 -p 4317     # then open http://127.0.0.1:4317
 ```
 
-`scripts/founderos.sh on | off | status` is the on/off switch meant for an Apple Shortcut ("Choose from Menu" with ON, OFF and Status, each running that script in a "Run Shell Script" action). ON starts `scripts/start.sh` as a detached background process and opens the browser once it answers (about 10 s), OFF stops it, and a second ON does nothing. `start.sh` runs inside an interactive zsh so credentials from your shell are available, adds `USER`, Homebrew and nvm's Node to a bare Shortcut PATH, builds and serves on localhost only. Set `FOUNDEROS_NO_OPEN=1` to skip opening the browser. Logs go to `~/Library/Logs/founderos.log`.
+`scripts/founderos.sh on | off | status` is the on/off switch meant for an Apple Shortcut ("Choose from Menu" with ON, OFF and Status, each running that script in a "Run Shell Script" action). ON starts `scripts/start.sh` as a detached background process and reports the URL once it answers (about 10 s; it does not open a browser), OFF stops it, and a second ON does nothing. `start.sh` runs inside an interactive zsh so credentials from your shell are available, adds `USER`, Homebrew and nvm's Node to a bare Shortcut PATH, builds and serves on localhost only. Running `start.sh` directly opens the browser unless `FOUNDEROS_NO_OPEN=1`. Logs go to `~/Library/Logs/founderos.log`.
 
 Shortcut setup: enable *Settings → Advanced → Allow Running Scripts* in Shortcuts, and allow Shortcuts to access the Documents folder when macOS asks (the app scans your repos). A launchd job does not work here, because macOS blocks background jobs from reading `~/Documents`.
 

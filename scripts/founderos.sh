@@ -1,5 +1,5 @@
 #!/bin/zsh
-# FounderOS on/off switch for an Apple Shortcut:  founderos.sh on | off | status
+# FounderOS on/off switch for an Apple Shortcut:  founderos.sh on | off | status  (never opens a browser)
 # ON starts scripts/start.sh as a detached background process (own session, so it outlives the Shortcut action);
 # start.sh loads your shell environment (credentials) and serves on 127.0.0.1 only. OFF stops whatever listens on the port.
 # The process inherits the Shortcut's file access, so Shortcuts needs access to the Documents folder (macOS asks once).
@@ -14,7 +14,7 @@ listener() { lsof -ti "tcp:$PORT" -sTCP:LISTEN 2>/dev/null; }
 
 case "$1" in
   on)
-    if is_up; then echo "FounderOS is already ON ($URL)"; [ -z "$FOUNDEROS_NO_OPEN" ] && open "$URL"; exit 0; fi
+    if is_up; then echo "FounderOS is already ON ($URL)"; exit 0; fi
     if [ -n "$(listener)" ]; then echo "Port $PORT is used by another process; not starting."; exit 1; fi
     mkdir -p "$ROOT/.state" "$HOME/Library/Logs"
     : > "$LOG"
@@ -22,7 +22,7 @@ case "$1" in
     FOUNDEROS_NO_OPEN=1 nohup /usr/bin/perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV' /bin/zsh "$ROOT/scripts/start.sh" >> "$LOG" 2>&1 < /dev/null &
     echo $! > "$PIDFILE"
     for i in $(seq 1 90); do
-      is_up && { echo "FounderOS is ON ($URL)"; [ -z "$FOUNDEROS_NO_OPEN" ] && open "$URL"; exit 0; }
+      is_up && { echo "FounderOS is ON ($URL)"; exit 0; }
       kill -0 "$(cat "$PIDFILE")" 2>/dev/null || { echo "FounderOS failed to start:"; tail -6 "$LOG"; exit 1; }
       sleep 1
     done
