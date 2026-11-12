@@ -1,6 +1,6 @@
 # FounderOS
 
-Theo's local dashboard + agent dispatch, on top of Herdr. Entity-neutral personal tooling (lives in `misc/`; the `misc/CLAUDE.md` tier applies). Plan: `~/.claude/plans/there-are-some-projects-moonlit-hearth.md`.
+Theo's local dashboard + agent dispatch, on top of Herdr. Entity-neutral personal tooling (lives at `~/Documents/founderos`, directly under the root tier; no entity folder). Plan: `~/.claude/plans/there-are-some-projects-moonlit-hearth.md`.
 
 - **Runs locally only** (`next start -H 127.0.0.1 -p 4317`), never on Vercel: it reads local sessions and repos.
 - **No n8n workflows.** Every panel reads its source live; n8n is a data source only (`src/lib/n8n.ts`).
